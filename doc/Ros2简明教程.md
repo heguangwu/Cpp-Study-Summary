@@ -100,7 +100,43 @@ install(TARGETS turtle_control DESTINATION lib/${PROJECT_NAME})
 
 **如需添加非ROS的第三方库，使用`target_link_libraries`而不是`ament_target_dependencies`**
 
+## ROS中使用QT显示界面
+
+```cpp
+#include <QApplication>
+#include <QLabel>
+#include <QString>
+#include "rclcpp/rclcpp.hpp"
+
+class SysStatusDisplay : public rclcpp::Node {
+    //省略相关实现
+}
+
+int main(int argc, char** argv) {
+    rclcpp::init(argc, argv);
+    QApplication app(argc, argv);
+    auto node = std::make_shared<SysStatusDisplay>();
+    // QT和ROS都需要阻塞执行，所以这里启动一个线程来启动ros
+    std::thread spin_thread([&]() -> void {rclcpp::spin(node);});
+    spin_thread.detach();
+    app.exec();
+    rclcpp::shutdown();
+    return 0;
+}
+```
+
 ```cmake
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(status_interfaces REQUIRED)
+find_package(Qt5 REQUIRED COMPONENTS Widgets)
+
+add_executable(sys_status_display src/sys_status_display.cpp)
 # 添加QT库
 target_link_libraries(turtle_circle Qt5::Widgets)
+# 添加ROS相关依赖
+ament_target_dependencies(sys_status_display rclcpp status_interfaces)
+
+install(TARGETS sys_status_display DESTINATION lib/${PROJECT_NAME})
+
 ```
