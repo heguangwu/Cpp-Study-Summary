@@ -97,3 +97,10 @@ ament_target_dependencies(turtle_control rclcpp geometry_msgs turtlesim)
 install(TARGETS turtle_circle DESTINATION lib/${PROJECT_NAME})
 install(TARGETS turtle_control DESTINATION lib/${PROJECT_NAME})
 ```
+
+**如需添加非ROS的第三方库，使用`target_link_libraries`而不是`ament_target_dependencies`**
+
+```cmake
+# 添加QT库
+target_link_libraries(turtle_circle Qt5::Widgets)
+```
