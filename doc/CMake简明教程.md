@@ -120,21 +120,23 @@ file(GLOB SRC_LIST ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 - `PROJECT_SOURCE_DIR`是执行`cmake`命令后的路径
 - `CMAKE_CURRENT_SOURCE_DIR` 是当前执行的`CMakeLists.txt`的路径
 
-## 搜索头文件
+### 搜索头文件
 
 ```cmake
 # 指定头文件路径，多个以空格隔开
 include_directories(${PROJECT_SOURCE_DIR}/include)
+# 另外一种方法
+# target_include_directories(目标 权限如PUBLIC 头文件路径)
 ```
 
-## 链接静态库
+### 链接静态库
 
 ```cmake
 link_directories(库路径1 库路径2)
 link_libraries(库名称1 库名称2)
 ```
 
-## 链接动态库
+### 链接动态库
 
 ```cmake
 link_directories(库路径1 库路径2)
@@ -143,6 +145,32 @@ target_link_libraries(my_app pthread)
 ```
 
 **`target_link_libraries`要放最后，也可以连接静态库。**
+
+### `find_package`搜索库
+
+使用`link_directories`有一个很重要的问题，当每一个机器安装的库路径不一样的时候，需要根据本机情况进行路径修改，那么有没有一种方法可以解决依赖库不同安装路径的问题呢，答案就是使用`find_package`。
+
+```cmake
+# 添加 opencv 的依赖
+find_package(OpenCV REQUIRED)
+
+# 头文件
+target_include_directories(my_app PRIVATE ${OpenCV_INCLUDE_DIRS})
+
+# 库文件
+target_link_libraries(my_app ${OpenCV_LIBS})
+```
+
+`find_package`的原理：
+
+- 第三方库（如`OpenCV`）提供被系统环境变量找到，目前存在两种模式，`Module`模式和`Config`模式。
+- `Module`模式查找路径：`CMAKE_MODULE_PATH`和`CMake`安装路径（即`CMAKE_ROOT`变量）下的`Modules`目录，查找到名为`Find<PackageName>.cmake`的配置文件
+- `Config`模式下是要查找名为`<PackageName>Config.cmake`或`<lower-case-package-name>-config.cmake`的模块文件
+，`Config`模式查找路径：
+  - `<PackageName>_DIR`的CMake变量或环境变量路径
+  - `CMAKE_PREFIX_PATH`、`CMAKE_FRAMEWORK_PATH`、`CMAKE_APPBUNDLE_PATH`的`CMake`变量或环境变量路径
+  - `PATH`环境变量路径
+- `Config`模式找到后会设置`<PackageName>_INCLUDE_DIRS`和`<PackageName>_LIBRARIES`两个变量
 
 ## `CMake`嵌套
 
